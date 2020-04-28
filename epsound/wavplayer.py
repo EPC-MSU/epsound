@@ -2,6 +2,7 @@ import simpleaudio as sa
 import threading
 import sys
 import os
+import subprocess
 
 
 class WavPlayer:
@@ -68,4 +69,5 @@ class WavPlayer:
         :param sound_name: name of sound in class
         :return:
         """
-        os.system("aplay {}&".format(self._sounds_files[sound_name]))
+        proc = subprocess.Popen(['aplay', self._sounds_files[sound_name]])
+        proc.wait()
