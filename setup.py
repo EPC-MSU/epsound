@@ -14,7 +14,7 @@ setup(name='epsound',
       license='MIT',
       packages=['epsound'],
       install_requires=[
-            'simpleaudio==1.0.0',
+            'simpleaudio==1.0.2',
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
