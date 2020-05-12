@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='epsound',
-      version='0.0.3',
+      version='0.0.4',
       description='Sound player library',
       long_description=long_description,
       long_description_content_type="text/markdown",
@@ -14,7 +14,7 @@ setup(name='epsound',
       license='MIT',
       packages=['epsound'],
       install_requires=[
-            'simpleaudio==1.0.0',
+            'simpleaudio==1.0.2',
       ],
       classifiers=[
             "Programming Language :: Python :: 3",
