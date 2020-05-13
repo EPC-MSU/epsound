@@ -3,6 +3,21 @@ import threading
 import sys
 import os
 import subprocess
+import wave
+
+
+class WavFile:
+    """
+    Class contains parameters of sound file
+    """
+    def __init__(self, path):
+        with wave.open(path, "rb") as f:
+            self.width = f.getsampwidth()
+            self.channels = f.getnchannels()
+            self.rate = f.getframerate()
+            self.frames = f.getnframes()
+            self.data = f.readframes(self.frames)
+            self.duration = float(self.frames) / self.rate
 
 
 class WavPlayer:
