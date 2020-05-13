@@ -11,6 +11,8 @@ class WavFile:
     Class contains parameters of sound file
     """
     def __init__(self, path):
+        self.wave_object = sa.WaveObject.from_wave_file(path)
+        self.file_name = path
         with wave.open(path, "rb") as f:
             self.width = f.getsampwidth()
             self.channels = f.getnchannels()
@@ -26,8 +28,7 @@ class WavPlayer:
     """
     def __init__(self):
 
-        self._sounds = dict()
-        self._sounds_files = dict()
+        self.sounds = dict()
         self._threads = []
 
         if sys.platform.startswith("linux"):
@@ -41,14 +42,12 @@ class WavPlayer:
 
     def add_sound(self, file: str, name: str):
         """
-        Function add sound to class from file
+        Function create WavFile-object with sound and add him to list
         :param file: filename with sound
         :param name: name of sound
         :return:
         """
-        wave_obj = sa.WaveObject.from_wave_file(file)
-        self._sounds[name] = wave_obj
-        self._sounds_files[name] = file
+        self.sounds[name] = WavFile(file)
 
     def stop(self):
         """
@@ -65,7 +64,7 @@ class WavPlayer:
         :return:
         """
         def _play():
-            self._sounds[sound_name].play()
+            self.sounds[name].wave_object.play()
         thread = threading.Thread(target=_play, args=())
         self._threads.append(thread)
         thread.start()
@@ -76,7 +75,7 @@ class WavPlayer:
         :param sound_name: name of sound in class
         :return:
         """
-        self.winsound.PlaySound(self._sounds_files[sound_name], self.winsound.SND_NOSTOP)
+        self.winsound.PlaySound(self.sounds[sound_name].file_name, self.winsound.SND_NOSTOP)
 
     def __play_linux(self, sound_name: str):
         """
@@ -84,5 +83,5 @@ class WavPlayer:
         :param sound_name: name of sound in class
         :return:
         """
-        proc = subprocess.Popen(['aplay', self._sounds_files[sound_name]])
+        proc = subprocess.Popen(['aplay', self.sounds[sound_name].file_name])
         proc.wait()
