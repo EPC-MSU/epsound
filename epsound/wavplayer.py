@@ -54,8 +54,7 @@ class WavPlayer:
     def set_mute(self, state: bool = True):
         self._mute = state
 
-    @property
-    def mute(self):
+    def is_mute(self):
         return self._mute
 
     def check_sound_available(self):
