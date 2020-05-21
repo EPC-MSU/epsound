@@ -54,6 +54,10 @@ class WavPlayer:
     def set_mute(self, state: bool = True):
         self._mute = state
 
+    @property
+    def mute(self):
+        return self._mute
+
     def check_sound_available(self):
         path_to_dummy_wav = join_path(dirname(__file__), "void.wav")
         self.add_sound(path_to_dummy_wav, "epsound_test_sound_for_driver_checking")
