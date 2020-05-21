@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 import wave
+from os.path import dirname, join as join_path
 
 
 class WavFile:
@@ -22,6 +23,14 @@ class WavFile:
             self.duration = float(self.frames) / self.rate
 
 
+def mute(func):
+    def decorated(self, *args, **kwargs):
+        if self._mute:
+            return
+        return func(self, *args, **kwargs)
+    return decorated
+
+
 class WavPlayer:
     """
     Class load sounds from files and play sounds
@@ -31,6 +40,8 @@ class WavPlayer:
         self.sounds = dict()
         self._threads = []
 
+        self._mute = False
+
         if sys.platform.startswith("linux"):
             self.play = self.__play_linux
         elif sys.platform.startswith("win"):
@@ -39,6 +50,18 @@ class WavPlayer:
             self.play = self.__play_win
         else:
             self.play = self.__play_sa
+
+    def set_mute(self, state: bool = True):
+        self._mute = state
+
+    def check_sound_available(self):
+        path_to_dummy_wav = join_path(dirname(__file__), "void.wav")
+        self.add_sound(path_to_dummy_wav, "epsound_test_sound_for_driver_checking")
+        try:
+            self.play("epsound_test_sound_for_driver_checking")
+            return True
+        except RuntimeError:
+            return False
 
     def add_sound(self, file: str, name: str):
         """
@@ -57,6 +80,7 @@ class WavPlayer:
         for th in self._threads:
             th.join()
 
+    @mute
     def __play_sa(self, sound_name: str):
         """
         Function play sound in another OS
@@ -64,11 +88,12 @@ class WavPlayer:
         :return:
         """
         def _play():
-            self.sounds[name].wave_object.play()
+            self.sounds[sound_name].wave_object.play()
         thread = threading.Thread(target=_play, args=())
         self._threads.append(thread)
         thread.start()
 
+    @mute
     def __play_win(self, sound_name: str):
         """
         Function play sound on windows
@@ -77,6 +102,7 @@ class WavPlayer:
         """
         self.winsound.PlaySound(self.sounds[sound_name].file_name, self.winsound.SND_NOSTOP)
 
+    @mute
     def __play_linux(self, sound_name: str):
         """
         Function play sound on linux
