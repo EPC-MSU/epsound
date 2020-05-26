@@ -35,10 +35,16 @@ class WavPlayer:
     """
     Class load sounds from files and play sounds
     """
-    def __init__(self):
+    def __init__(self, wait: bool = True):
+        """
+        WavPlayer
+        :param wait: Play sound in sync mode
+        """
 
         self.sounds = dict()
         self._threads = []
+
+        self._wait = wait
 
         self._mute = False
 
@@ -103,7 +109,11 @@ class WavPlayer:
         :param sound_name: name of sound in class
         :return:
         """
-        self.winsound.PlaySound(self.sounds[sound_name].file_name, self.winsound.SND_NOSTOP)
+        flags = self.winsound.SND_NOSTOP
+        if not self._wait:
+            flags |= self.winsound.SND_ASYNC
+
+        self.winsound.PlaySound(self.sounds[sound_name].file_name, flags)
 
     @mute
     def __play_linux(self, sound_name: str):
@@ -113,4 +123,5 @@ class WavPlayer:
         :return:
         """
         proc = subprocess.Popen(['aplay', self.sounds[sound_name].file_name])
-        proc.wait()
+        if self._wait:
+            proc.wait()
