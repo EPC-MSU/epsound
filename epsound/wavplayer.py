@@ -109,9 +109,11 @@ class WavPlayer:
         :param sound_name: name of sound in class
         :return:
         """
-        flags = self.winsound.SND_NOSTOP
+        flags = 0
         if not self._wait:
             flags |= self.winsound.SND_ASYNC
+        else:
+            flags |= self.winsound.SND_NOSTOP
 
         self.winsound.PlaySound(self.sounds[sound_name].file_name, flags)
 
