@@ -1,30 +1,30 @@
-
-import simpleaudio as sa
-import threading
-import sys
 import os
 import subprocess
+import sys
+import threading
 import wave
-from os.path import dirname, join as join_path
+from typing import Callable, Optional
+import simpleaudio as sa
 
 
 class WavFile:
     """
-    Class contains parameters of sound file
+    Class contains parameters of sound file.
     """
-    def __init__(self, path):
+
+    def __init__(self, path: str):
         self.wave_object = sa.WaveObject.from_wave_file(path)
         self.file_name = path
-        with wave.open(path, "rb") as f:
-            self.width = f.getsampwidth()
-            self.channels = f.getnchannels()
-            self.rate = f.getframerate()
-            self.frames = f.getnframes()
-            self.data = f.readframes(self.frames)
+        with wave.open(path, "rb") as file:
+            self.width = file.getsampwidth()
+            self.channels = file.getnchannels()
+            self.rate = file.getframerate()
+            self.frames = file.getnframes()
+            self.data = file.readframes(self.frames)
             self.duration = float(self.frames) / self.rate
 
 
-def mute(func):
+def mute(func: Callable):
     def decorated(self, *args, **kwargs):
         if self._mute:
             return
@@ -34,20 +34,20 @@ def mute(func):
 
 class WavPlayer:
     """
-    Class load sounds from files and play sounds
+    Class loads sounds from files and plays sounds.
     """
-    def __init__(self, wait: bool = True):
+
+    def __init__(self, wait: bool = True, device: Optional[str] = None):
         """
-        WavPlayer
-        :param wait: Play sound in sync mode
+        :param wait: play sound in sync mode;
+        :param device: device to play sound on (valid for Linux).
         """
 
         self.sounds = dict()
-        self._threads = []
-
-        self._wait = wait
-
+        self._device = device
         self._mute = False
+        self._threads = []
+        self._wait = wait
 
         if sys.platform.startswith("linux"):
             self.play = self.__play_linux
@@ -58,14 +58,22 @@ class WavPlayer:
         else:
             self.play = self.__play_sa
 
-    def set_mute(self, state: bool = True):
-        self._mute = state
+    def add_sound(self, file_name: str, sound_name: str):
+        """
+        Method creates WavFile-object with sound and adds it to dictionary.
+        :param file_name: name of file with sound;
+        :param sound_name: name of sound.
+        """
 
-    def is_mute(self):
-        return self._mute
+        self.sounds[sound_name] = WavFile(file_name)
 
-    def check_sound_available(self):
-        path_to_dummy_wav = join_path(dirname(__file__), "void.wav")
+    def check_sound_available(self) -> bool:
+        """
+        Method checks if it is possible to play sound files in system.
+        :return: True if it is possible.
+        """
+
+        path_to_dummy_wav = os.path.join(os.path.dirname(__file__), "void.wav")
         self.add_sound(path_to_dummy_wav, "epsound_test_sound_for_driver_checking")
         try:
             self.play("epsound_test_sound_for_driver_checking")
@@ -73,14 +81,19 @@ class WavPlayer:
         except RuntimeError:
             return False
 
-    def add_sound(self, file: str, name: str):
+    def is_mute(self) -> bool:
+        return self._mute
+
+    def set_device(self, device: str):
         """
-        Function create WavFile-object with sound and add him to list
-        :param file: filename with sound
-        :param name: name of sound
-        :return:
+        Method sets audio device to play sound. Method is relevant for Linux only.
+        :param device: audio device.
         """
-        self.sounds[name] = WavFile(file)
+
+        self._device = device
+
+    def set_mute(self, state: bool = True):
+        self._mute = state
 
     def stop(self):
         """
@@ -91,14 +104,32 @@ class WavPlayer:
             th.join()
 
     @mute
+    def __play_linux(self, sound_name: str):
+        """
+        Method plays sound on Linux.
+        :param sound_name: name of sound to be played.
+        """
+
+        fh = open(os.devnull, "wb")
+        if self._device:
+            args = ["aplay", "--device", self._device, self.sounds[sound_name].file_name]
+        else:
+            args = ["aplay", self.sounds[sound_name].file_name]
+        proc = subprocess.Popen(args, stdout=fh, stderr=fh)
+        if self._wait:
+            proc.wait()
+        fh.close()
+
+    @mute
     def __play_sa(self, sound_name: str):
         """
-        Function play sound in another OS
-        :param sound_name: name of sound in class
-        :return:
+        Method plays sound in another OS.
+        :param sound_name: name of sound to be played.
         """
+
         def _play():
             self.sounds[sound_name].wave_object.play()
+
         thread = threading.Thread(target=_play, args=())
         self._threads.append(thread)
         thread.start()
@@ -106,25 +137,11 @@ class WavPlayer:
     @mute
     def __play_win(self, sound_name: str):
         """
-        Function play sound on windows
-        :param sound_name: name of sound in class
-        :return:
+        Method plays sound on Windows.
+        :param sound_name: name of sound to be played.
         """
+
         flags = self.winsound.SND_NOSTOP
         if not self._wait:
             flags |= self.winsound.SND_ASYNC
-
         self.winsound.PlaySound(self.sounds[sound_name].file_name, flags)
-
-    @mute
-    def __play_linux(self, sound_name: str):
-        """
-        Function play sound on linux
-        :param sound_name: name of sound in class
-        :return:
-        """
-        fh = open(os.devnull, "wb")
-        proc = subprocess.Popen(['aplay', self.sounds[sound_name].file_name], stdout=fh, stderr=fh)
-        if self._wait:
-            proc.wait()
-        fh.close()

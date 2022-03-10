@@ -1,3 +1,3 @@
-from .wavplayer import WavPlayer, WavFile
+from .wavplayer import WavFile, WavPlayer
 
-__all__ = ["WavPlayer", "WavFile"]
+__all__ = ["WavFile", "WavPlayer"]
