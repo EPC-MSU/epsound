@@ -144,7 +144,7 @@ class WavPlayer:
         if self._device:
             args.extend(["--device", self._device])
         if self._channels:
-            args.extend(["--channels", self._channels])
+            args.extend(["--channels", str(self._channels)])
         args.append(self.sounds[sound_name].file_name)
         proc = subprocess.Popen(args, stdout=fh, stderr=fh)
         if self._wait:
