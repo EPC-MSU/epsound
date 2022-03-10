@@ -37,13 +37,14 @@ class WavPlayer:
     Class loads sounds from files and plays sounds.
     """
 
-    def __init__(self, wait: bool = True, device: Optional[str] = None):
+    def __init__(self, wait: bool = True, device: Optional[str] = None, channels: Optional[int] = None):
         """
         :param wait: play sound in sync mode;
         :param device: device to play sound on (valid for Linux).
         """
 
         self.sounds = dict()
+        self._channels = channels
         self._device = device
         self._mute = False
         self._threads = []
@@ -84,12 +85,30 @@ class WavPlayer:
     def is_mute(self) -> bool:
         return self._mute
 
+    def remove_channels(self):
+        """
+        Method removes channels.
+        """
+
+        self._channels = None
+
     def remove_device(self):
         """
         Method removes audio device.
         """
 
         self._device = None
+
+    def set_channels(self, channels: int):
+        """
+        Method sets number of used channels.
+        :param channels: number of used channels.
+        """
+
+        if channels:
+            self._channels = channels
+        else:
+            self._channels = None
 
     def set_device(self, device: str):
         """
@@ -121,10 +140,12 @@ class WavPlayer:
         """
 
         fh = open(os.devnull, "wb")
+        args = ["aplay",]
         if self._device:
-            args = ["aplay", "--device", self._device, self.sounds[sound_name].file_name]
-        else:
-            args = ["aplay", self.sounds[sound_name].file_name]
+            args.extend(["--device", self._device])
+        if self._channels:
+            args.extend(["--channels", self._channels])
+        args.append(self.sounds[sound_name].file_name)
         proc = subprocess.Popen(args, stdout=fh, stderr=fh)
         if self._wait:
             proc.wait()
