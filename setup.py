@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(name='epsound',
-      version='0.1.1',
+      version='0.1.2',
       description='Sound player library',
       long_description=long_description,
       long_description_content_type="text/markdown",
