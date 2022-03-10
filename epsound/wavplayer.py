@@ -84,13 +84,23 @@ class WavPlayer:
     def is_mute(self) -> bool:
         return self._mute
 
+    def remove_device(self):
+        """
+        Method removes audio device.
+        """
+
+        self._device = None
+
     def set_device(self, device: str):
         """
         Method sets audio device to play sound. Method is relevant for Linux only.
         :param device: audio device.
         """
 
-        self._device = device
+        if device:
+            self._device = device
+        else:
+            self._device = None
 
     def set_mute(self, state: bool = True):
         self._mute = state
