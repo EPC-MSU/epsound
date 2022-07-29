@@ -29,7 +29,7 @@ import epsound
 
 if __name__ == "__main__":
     # Let's create object of class WavPlayer and add sound from file with name "one" to it
-    player = epsound.WavPlayer()
+    player = epsound.WavPlayer(wait = False)
     player.add_sound(file_name="sound.wav", sound_name="one")
     # Then let's play sound
     player.play("one")
