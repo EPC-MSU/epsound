@@ -30,9 +30,14 @@ import epsound
 if __name__ == "__main__":
     # Let's create object of class WavPlayer and add sound from file with name "one" to it
     player = epsound.WavPlayer()
-    player.add_sound(file="sound.wav", name="one")
+    player.add_sound(file_name="sound.wav", sound_name="one")
     # Then let's play sound
     player.play("one")
     time.sleep(1)
+    
+    # Let's stop the sound after half a second
+    player.play("one")
+    time.sleep(0.5)
+    player.stop()
 
 ```
