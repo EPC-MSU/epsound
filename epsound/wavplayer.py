@@ -48,16 +48,20 @@ class WavPlayer:
         self._device = device
         self._mute = False
         self._threads = []
+        self._processes = []
         self._wait = wait
 
         if sys.platform.startswith("linux"):
             self.play = self.__play_linux
+            self.stop = self.__stop_linux
         elif sys.platform.startswith("win"):
             import winsound
             self.winsound = winsound
             self.play = self.__play_win
+            self.stop = self.__stop_win
         else:
             self.play = self.__play_sa
+            self.stop = self.__stop_sa
 
     def add_sound(self, file_name: str, sound_name: str):
         """
@@ -124,14 +128,6 @@ class WavPlayer:
     def set_mute(self, state: bool = True):
         self._mute = state
 
-    def stop(self):
-        """
-        Function stop thread with sound
-        :return:
-        """
-        for th in self._threads:
-            th.join()
-
     @mute
     def __play_linux(self, sound_name: str):
         """
@@ -147,6 +143,7 @@ class WavPlayer:
             args.extend(["--channels", str(self._channels)])
         args.append(self.sounds[sound_name].file_name)
         proc = subprocess.Popen(args, stdout=fh, stderr=fh)
+        self._processes.append(proc)
         if self._wait:
             proc.wait()
         fh.close()
@@ -176,3 +173,30 @@ class WavPlayer:
         if not self._wait:
             flags |= self.winsound.SND_ASYNC
         self.winsound.PlaySound(self.sounds[sound_name].file_name, flags)
+
+    @mute
+    def __stop_linux(self):
+        """
+        Method stops sound on Linux.
+        """
+
+        for proc in self._processes:
+            proc.kill()
+            self._processes.remove(proc)
+
+    @mute
+    def __stop_sa(self):
+        """
+        Method stops sound in another OS.
+        """
+
+        for th in self._threads:
+            th.join()
+
+    @mute
+    def __stop_win(self):
+        """
+        Method stops sound on Windows.
+        """
+
+        self.winsound.PlaySound(None, self.winsound.SND_PURGE)
